@@ -1,61 +1,28 @@
+# CoinFLEX Python API Clients
+CoinFLEX's application programming interfaces [API](https://github.com/coinflex-exchange/API) provide our clients programmatic access to control aspects of their accounts and to place orders on CoinFLEX's trading platforms. 
 
-# CoinFLEX Python Client
-An Python class, together with a "driver" code, meant as an example of making authenticated calls to CoinFLEX's [WebSocket API.](https://bitbucket.org/coinflex/api/src/master/WEBSOCKET-README.md)
+CoinFLEX provides several different types of APIs:
 
-## Prerequisites
-- [Python 3][python] interpreter, together with the "devel" counterpart
-- [gmp][gmp] GNU Multi Precision Arithmetic Library, together with the "devel" counterpart
-- [pip3][pip] package manager
-- [ecdsa][ecdsa] library for creating Elliptic Curve signatures
-- [websocket-client][ws-client] library for WebSocket support
+* our native [WebSocket API](https://github.com/coinflex-exchange/API/blob/master/WEBSOCKET-README.md)
+* a [REST API](https://github.com/coinflex-exchange/API/blob/master/REST.md)
+* an [Event Stream resource](https://github.com/coinflex-exchange/API/blob/master/EventStream.md) 
+* and a second futures [Event Stream resource](https://github.com/coinflex-exchange/API/blob/master/FUTURES.md#get-borrowerevents) for your collateral, leverage and margin
 
-[python]:https://www.python.org/
-[gmp]:https://gmplib.org/
-[pip]:https://pip.pypa.io/en/stable/
-[ecdsa]:https://pypi.org/project/ecdsa/
+Using these interfaces it is possible to make both authenticated and unauthenticated API calls, with the exception of the Futures Event Stream which is authenticated only.
+
+Here we provide examples of how to connect to each of these APIs using Python.
+
+## Websocket API
+Its worth mentioning that there are several different apporaches to creating a Python Websocket client with different examples submitted here to help clients get connected.
+
+* Method 1 - Uses [websocket-client][ws-client]
+* Method 2 - Uses [asyncio][asyncio] in conjunction with [websockets][websockets]
+
 [ws-client]:https://pypi.org/project/websocket-client/
+[websockets]:https://pypi.org/project/websockets/
+[asyncio]:https://pypi.org/project/asyncio/
+[sse-client]:https://pypi.org/project/aiohttp-sse-client/
+[cflex-ws-method2]:https://github.com/coinflex-exchange/python-library/tree/master/Websocket%20API%20(Method%202)
 
-## Preparation
-In major Linux distributions, packages `Python 3` and `pip3` either are already installed, or can be installed using the distribution-specific package manager.
-Package `pip` works **only** with `Python 2`, to install pip packages for `Python 3`, `pip3` tool needs to be used.
-On Windows, `pip3` package manager comes installed as a part of the standard `Python 3` [release.](https://www.python.org/downloads/windows/)
-The client also imports the following: `base64`, `hashlib`, `json`, `random`, `ssl`, `threading`, `time`. All of these; however, come together with a `Python 3` installation, and are merely enumerated here.
-
-To install `websocket-client` and `ecdsa` libraries, run
-```
-pip3 install [--user] "websocket-client<0.49.0" ecdsa
-```
-with appropriate privileges.
-
-After the above dependencies have been meet, the client is ready to run.
-
-## Executing
-Executing
-```
-[<path>/]clientExample.py -h
-```
-will give the list of arguments, together with their up to date description
-
-## Details
-The main part of the client is a `WSClient` class, which is initalised with the WebSocket endpoint's URL (obligatory) and the optional event hooks:
-```
-msg_handler
-err_handler    (default action: raise a 'ConnectionError')
-open_handler
-close_handler
-ping_handler
-pong_handler
-insecure_ssl
-socket_timeout (default value: 5 seconds)
-```
-
-Connecting and authenticating are done in a lazy manner, i.e. the connection is being made only when data need to be sent, and authentication data are sent the first time non-public method is being called. Upon the first method being called, after the connection and/or authentication have been established, the client starts the "event" thread which monitors messages coming in from the server and handles them accordingly (which normally involves passing them to the `msg_handler`).
-At the same time, the same instance of the `WSClient` class may be used to call remote WebSocket methods.
-By default, **only** in two cases:
-
-- the connection is being established, and
-- the authentication is being attempted
-
-is the `WSClient` instance thread-safe (that is, the sending thread will block and wait for the connecting/authenticating sequence to complete before allowing any further calls).
-
-The client also defines an `Assets` dictionary, which contains mappings between asset names and their codes.
+## Event Stream API
+Current example shown here uses [aiohttp-sse-client][sse-client], primarily because it has full asyncio support meaning this approach can be combined with [Websocket - Method 2][cflex-ws-method2] allowing clients to maintain two CoinFLEX data streams in parrallel, (1) from an Event Stream and (2) from a websocket.
